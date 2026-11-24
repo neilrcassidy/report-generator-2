@@ -1,0 +1,119 @@
+{% from "_macros.html" import error, icon, status, tier_pill %}
+<section id="exams" class="stack">
+  <div class="card">
+    <div class="card-head">
+      <h2>Resultado</h2>
+      {% if result %}
+      <a class="button" href="/students/{{ student.id }}/report.pdf" download>{{ icon('file-down') }}<span>Descargar informe PDF</span></a>
+      {% endif %}
+    </div>
+    {% if result %}
+    <div class="result">
+      <div class="result-total">
+        <span class="eyebrow">{{ config.texts.labels.total_score }}</span>
+        <div class="gauge gauge-{{ result.tier }}" style="--value: {{ result.overall }}" role="img"
+             aria-label="{{ config.texts.labels.total_score }} {{ result.overall }} %">
+          <span class="gauge-value">{{ result.overall }} %</span>
+        </div>
+        {{ tier_pill(config, result.tier) }}
+      </div>
+      <div class="result-skills">
+        <span class="eyebrow">{{ config.texts.labels.individual_score }}</span>
+        <ul class="skills">
+          {% for s in result.skills %}
+          <li>
+            <span class="skill-name">{{ s.skill }}</span>
+            <span class="skill-bar" role="img" aria-label="{{ s.skill }} {{ s.score }} %"><span class="skill-fill fill-{{ s.tier }}" style="width: {{ s.score }}%"></span></span>
+            <span class="skill-value">{{ s.score }} %</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="muted small">{{ config.texts.labels.exams_done }} {{ result.exams_done }} · Media de los últimos 3 exámenes.</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state compact">
+      {{ icon('file-text', 'empty-icon') }}
+      <p class="muted">Añade el primer mock exam para ver el resultado.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Añadir mock exam</h2></div>
+    <form method="post" action="/students/{{ student.id }}/exams" class="form exam-form" novalidate
+          hx-post="/students/{{ student.id }}/exams" hx-target="#exams" hx-swap="outerHTML">
+      <div class="field">
+        <label for="taken_on">Fecha</label>
+        <input type="date" id="taken_on" name="taken_on" value="{{ values.get('taken_on', '') }}" required
+               {% if errors.taken_on %}aria-invalid="true" aria-describedby="taken_on-error"{% endif %}>
+        {{ error(errors, 'taken_on') }}
+      </div>
+      {% for skill in skills %}
+      {% set field = 'score:' ~ skill %}
+      {% set field_id = field | replace(' ', '_') | replace(':', '-') %}
+      <div class="field">
+        <label for="{{ field_id }}">{{ skill }}</label>
+        <div class="input-suffix">
+          <input type="number" id="{{ field_id }}" name="{{ field }}" value="{{ values.get(field, '') }}"
+                 min="0" max="100" step="0.1" required inputmode="decimal"
+                 {% if errors.get(field) %}aria-invalid="true" aria-describedby="{{ field_id }}-error"{% endif %}>
+          <span aria-hidden="true">%</span>
+        </div>
+        {{ error(errors, field) }}
+      </div>
+      {% endfor %}
+      <div class="form-actions">
+        <button type="submit" class="button">{{ icon('plus') }}<span>Añadir examen</span></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Exámenes ({{ exams | length }})</h2>
+      {% if exams %}<span class="legend"><span class="counted-dot" aria-hidden="true"></span>Cuenta para la media</span>{% endif %}
+    </div>
+    {% if exams %}
+    <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          {% for skill in skills %}<th class="num">{{ skill }}</th>{% endfor %}
+          <th class="col-actions"><span class="visually-hidden">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exam in exams %}
+        {% set by_skill = {} %}
+        {% for s in exam.scores %}{% set _ = by_skill.update({s.skill: s.score}) %}{% endfor %}
+        <tr {% if loop.index <= 3 %}class="counted"{% endif %}>
+          <td>
+            {% if loop.index <= 3 %}<span class="counted-dot" title="Cuenta para la media"></span>{% endif %}
+            {{ exam.taken_on.strftime('%d/%m/%Y') }}
+          </td>
+          {% for skill in skills %}
+          <td class="num">{% if skill in by_skill %}{{ '%g' | format(by_skill[skill]) }}{% else %}—{% endif %}</td>
+          {% endfor %}
+          <td class="col-actions">
+            <form method="post" action="/students/{{ student.id }}/exams/{{ exam.id }}/delete"
+                  hx-post="/students/{{ student.id }}/exams/{{ exam.id }}/delete" hx-target="#exams" hx-swap="outerHTML"
+                  hx-confirm="¿Eliminar el examen del {{ exam.taken_on.strftime('%d/%m/%Y') }}?">
+              <button type="submit" class="icon-button danger" title="Eliminar examen"
+                      aria-label="Eliminar examen del {{ exam.taken_on.strftime('%d/%m/%Y') }}">{{ icon('trash-2') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state compact">
+      {{ icon('inbox', 'empty-icon') }}
+      <p class="muted">Todavía no hay exámenes.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>

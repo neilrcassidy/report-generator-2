@@ -1,0 +1,49 @@
+{# Lucide icon from static/icons.svg; decorative (pair it with visible or aria text). #}
+{% macro icon(name, class="") -%}
+  <svg class="icon {{ class }}" aria-hidden="true" focusable="false"><use href="/static/icons.svg#{{ name }}"></use></svg>
+{%- endmacro %}
+
+{% macro error(errors, field) -%}
+  {%- set code = errors.get(field) -%}
+  {%- if code -%}
+    <p class="field-error" id="{{ field | replace(' ', '_') | replace(':', '-') }}-error">
+      {{- icon('circle-alert') -}}
+      <span>
+      {%- if code == 'required' -%}Este campo es obligatorio.
+      {%- elif code == 'out_of_range' -%}Introduce un valor entre 0 y 100.
+      {%- elif code == 'too_long' -%}El texto es demasiado largo.
+      {%- else -%}Valor no válido.
+      {%- endif -%}
+      </span>
+    </p>
+  {%- endif -%}
+{%- endmacro %}
+
+{# Status text from config; may contain ReportLab <br/> markup, which is fine in HTML. #}
+{% macro status(config, tier) -%}
+  {%- if tier == 'pass' -%}{{ config.texts.status_pass | safe }}
+  {%- elif tier == 'average' -%}{{ config.texts.status_average | safe }}
+  {%- else -%}{{ config.texts.status_fail | safe }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro tier_pill(config, tier) -%}
+  <span class="pill pill-{{ tier }}">
+    {{- icon('check' if tier == 'pass' else 'circle-alert') -}}
+    <span>{{ status(config, tier) | replace('<br/>', ' ') | safe }}</span>
+  </span>
+{%- endmacro %}
+
+{% macro avatar(name) -%}
+  {%- set parts = name.split() -%}
+  <span class="avatar" aria-hidden="true">
+    {{- (parts[0][0] ~ (parts[-1][0] if parts | length > 1 else '')) | upper -}}
+  </span>
+{%- endmacro %}
+
+{% macro meter(value, tier) -%}
+  <span class="meter">
+    <span class="meter-track"><span class="meter-fill fill-{{ tier }}" style="width: {{ value }}%"></span></span>
+    <span class="meter-value">{{ value }} %</span>
+  </span>
+{%- endmacro %}

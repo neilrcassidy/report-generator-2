@@ -1,0 +1,48 @@
+{% from "_macros.html" import icon, tier_pill, avatar, meter %}
+{% if rows %}
+<div class="table-scroll">
+<table class="table students-table">
+  <thead>
+    <tr>
+      <th class="col-check"><input type="checkbox" data-select-all aria-label="Seleccionar todos los alumnos visibles"></th>
+      <th>Alumno/a</th>
+      <th>Certificación</th>
+      <th class="num">Exámenes</th>
+      <th>Total</th>
+      <th>Estado</th>
+      <th class="col-actions"><span class="visually-hidden">Informe</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student, result in rows %}
+    <tr>
+      <td class="col-check">
+        <input type="checkbox" name="ids" value="{{ student.id }}" data-select-row
+               data-has-result="{{ 'true' if result else 'false' }}"
+               aria-label="Seleccionar a {{ student.name }}">
+      </td>
+      <td>
+        <a class="student-link" href="/students/{{ student.id }}">{{ avatar(student.name) }}<span>{{ student.name }}</span></a>
+      </td>
+      <td><span class="badge">{{ student.certification }}</span></td>
+      <td class="num">{{ student.exams | length }}</td>
+      <td>{% if result %}{{ meter(result.overall, result.tier) }}{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{% if result %}{{ tier_pill(config, result.tier) }}{% else %}<span class="muted">Sin exámenes</span>{% endif %}</td>
+      <td class="col-actions">
+        {% if result %}
+        <a class="icon-button" href="/students/{{ student.id }}/report.pdf" download
+           title="Descargar PDF" aria-label="Descargar PDF de {{ student.name }}">{{ icon('file-down') }}</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+  {{ icon('search', 'empty-icon') }}
+  <h2>Sin resultados</h2>
+  <p class="muted">Ningún alumno coincide con la búsqueda o el filtro.</p>
+</div>
+{% endif %}

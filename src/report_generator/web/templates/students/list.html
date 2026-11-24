@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Alumnos</h1>
+    <p class="muted">Selecciona alumnos para descargar sus informes o eliminarlos.</p>
+  </div>
+  <a class="button" href="/students/new">{{ icon('plus') }}<span>Nuevo alumno</span></a>
+</div>
+
+{% if has_students %}
+<form id="filters" class="filters" role="search" action="/students" method="get"
+      hx-get="/students" hx-trigger="input changed delay:250ms from:#q, change from:#cert, submit"
+      hx-target="#student-rows" hx-push-url="true">
+  <label class="search-field">
+    {{ icon('search') }}
+    <span class="visually-hidden">Buscar alumno</span>
+    <input type="search" id="q" name="q" value="{{ q }}" placeholder="Buscar por nombre…" autocomplete="off">
+  </label>
+  <label class="select-field">
+    <span class="visually-hidden">Certificación</span>
+    <select id="cert" name="cert">
+      <option value="">Todas las certificaciones</option>
+      {% for c in config.certifications %}
+      <option value="{{ c }}" {% if c == cert %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <noscript><button type="submit" class="button button-secondary">Filtrar</button></noscript>
+</form>
+
+{# One form for the whole selection; each action button picks its own formaction/method.
+   static/js/selection.js keeps counts, labels and disabled states in sync. #}
+<form id="selection" class="card selection-card" method="get" action="/reports/download" data-selection>
+  <div class="selection-bar" data-selection-bar>
+    <div class="selection-status">
+      <span class="selection-count" data-count
+            data-label-none="Ningún alumno seleccionado"
+            data-label-one="1 alumno seleccionado"
+            data-label-many="{n} alumnos seleccionados">Ningún alumno seleccionado</span>
+      <span class="selection-hint" data-hint hidden>{{ icon('circle-alert') }}<span>Los alumnos seleccionados no tienen exámenes.</span></span>
+    </div>
+    <div class="selection-actions">
+      <button type="button" class="button button-ghost" data-action="clear">
+        {{ icon('x') }}<span>Quitar selección</span>
+      </button>
+      <button type="submit" class="button button-danger-outline" data-action="delete"
+              formaction="/students/delete" formmethod="post"
+              data-label-none="Eliminar" data-label-many="Eliminar ({n})" data-label-all="Eliminar todos"
+              data-confirm-one="¿Eliminar al alumno seleccionado y todos sus exámenes? Esta acción no se puede deshacer."
+              data-confirm-many="¿Eliminar {n} alumnos y todos sus exámenes? Esta acción no se puede deshacer.">
+        {{ icon('trash-2') }}<span data-label>Eliminar</span>
+      </button>
+      <button type="submit" class="button" data-action="download"
+              formaction="/reports/download" formmethod="get"
+              data-label-none="Descargar selección" data-label-one="Descargar PDF"
+              data-label-many="Descargar {n} informes (ZIP)" data-label-all="Descargar todos (ZIP)">
+        {{ icon('download') }}<span data-label>Descargar selección</span>
+      </button>
+    </div>
+  </div>
+  <div id="student-rows">
+    {% include "students/_rows.html" %}
+  </div>
+</form>
+{% else %}
+<div class="empty-state card">
+  {{ icon('users', 'empty-icon') }}
+  <h2>Todavía no hay alumnos</h2>
+  <p class="muted">Añade el primer alumno para empezar a registrar sus mock exams.</p>
+  <a class="button" href="/students/new">{{ icon('plus') }}<span>Nuevo alumno</span></a>
+</div>
+{% endif %}
+{% endblock %}

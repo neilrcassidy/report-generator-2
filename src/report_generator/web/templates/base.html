@@ -1,0 +1,67 @@
+{% from "_macros.html" import icon %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}{{ config.texts.title }}{% endblock %}</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  <style>
+    :root {
+      --brand: {{ config.colors.green_dark }};
+      --tier-pass: {{ config.colors.green_light }};
+      --tier-average: {{ config.colors.yellow }};
+      --tier-fail: {{ config.colors.red }};
+      --gauge-track: {{ config.colors.black }};
+    }
+  </style>
+  <script src="{{ url_for('static', path='htmx.min.js') }}" defer></script>
+  <script src="{{ url_for('static', path='js/toast.js') }}" defer></script>
+  <script src="{{ url_for('static', path='js/confirm.js') }}" defer></script>
+  <script src="{{ url_for('static', path='js/selection.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="/students" class="brand">
+        <img src="/assets/logo.png" alt="{{ config.texts.title }}" width="140" height="50">
+      </a>
+      <span class="site-subtitle">{{ config.texts.subtitle }}</span>
+    </div>
+  </header>
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {# Confirmation dialog used by forms with data-confirm and by hx-confirm (static/js/confirm.js). #}
+  <dialog id="confirm-dialog" class="dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form method="dialog">
+      <div class="dialog-icon">{{ icon('circle-alert') }}</div>
+      <h2 id="confirm-title">¿Estás seguro?</h2>
+      <p id="confirm-message" data-message></p>
+      <div class="dialog-actions">
+        <button value="cancel" class="button button-secondary" autofocus>Cancelar</button>
+        <button value="confirm" class="button button-danger">{{ icon('trash-2') }}<span>Eliminar</span></button>
+      </div>
+    </form>
+  </dialog>
+
+  {# Toasts (static/js/toast.js). Python only sends notice codes; the texts live here. #}
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+  <template id="toast-template">
+    <div class="toast">{{ icon('check') }}<span data-text></span></div>
+  </template>
+  <template id="notice-texts">
+    <span data-code="student_created">Alumno creado.</span>
+    <span data-code="student_deleted">Alumno eliminado.</span>
+    <span data-code="students_deleted_one">Se ha eliminado 1 alumno.</span>
+    <span data-code="students_deleted">Se han eliminado {n} alumnos.</span>
+    <span data-code="exam_added">Examen añadido.</span>
+    <span data-code="exam_deleted">Examen eliminado.</span>
+  </template>
+</body>
+</html>

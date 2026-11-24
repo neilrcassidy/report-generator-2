@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import error, icon %}
+{% block title %}Nuevo alumno · {{ config.texts.title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="/students">{{ icon('arrow-left') }}<span>Alumnos</span></a>
+<div class="page-head">
+  <h1>Nuevo alumno</h1>
+</div>
+
+<form method="post" action="/students" class="card form narrow" novalidate>
+  <div class="field">
+    <label for="name">Nombre y apellidos</label>
+    <input id="name" name="name" value="{{ values.get('name', '') }}" required maxlength="200"
+           autocomplete="off" autofocus
+           {% if errors.name %}aria-invalid="true" aria-describedby="name-error"{% endif %}>
+    {{ error(errors, 'name') }}
+  </div>
+
+  <div class="field">
+    <label for="certification">Certificación</label>
+    <select id="certification" name="certification" required
+            {% if errors.certification %}aria-invalid="true" aria-describedby="certification-error"{% endif %}>
+      <option value="">Selecciona…</option>
+      {% for cert in config.certifications %}
+      <option value="{{ cert }}" {% if values.get('certification') == cert %}selected{% endif %}>{{ cert }}</option>
+      {% endfor %}
+    </select>
+    {{ error(errors, 'certification') }}
+  </div>
+
+  <div class="form-actions">
+    <a class="button button-ghost" href="/students">Cancelar</a>
+    <button type="submit" class="button">{{ icon('check') }}<span>Guardar alumno</span></button>
+  </div>
+</form>
+{% endblock %}
